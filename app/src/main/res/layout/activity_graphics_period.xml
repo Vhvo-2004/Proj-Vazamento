@@ -3,25 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:ignore="ExtraText">
 
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart2"
-        android:layout_width="410dp"
-        android:layout_height="546dp"
+        android:layout_width="414dp"
+        android:layout_height="644dp"
         android:background="@color/white"
         tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="80dp" />
-
+        tools:layout_editor_absoluteX="-3dp"
+        tools:layout_editor_absoluteY="86dp" />
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabl"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_width="411dp"
+        android:layout_height="34dp"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp">
+        tools:layout_editor_absoluteY="54dp">
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/Semana"
@@ -41,6 +41,24 @@
             android:layout_height="wrap_content"
             android:text="Ano" />
     </com.google.android.material.tabs.TabLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="210dp"
+        android:layout_height="40dp"
+        android:hint="@string/select"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="202dp"
+        tools:layout_editor_absoluteY="2dp"
+        android:style="@style/MyCustomStyle"
+        >
+
+        <AutoCompleteTextView
+            android:id="@+id/selecttext"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="none"
+            android:padding="16dp"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

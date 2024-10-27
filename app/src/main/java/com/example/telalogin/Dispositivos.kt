@@ -17,6 +17,8 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.components.LimitLine
+import com.github.mikephil.charting.components.YAxis
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.text.SimpleDateFormat
@@ -30,13 +32,13 @@ class Dispositivos : AppCompatActivity() {
     private lateinit var textViewBateria: TextView
     private lateinit var chart: LineChart
     private lateinit var btnValv: Button
-    private lateinit var btnColetarDados: Button
+    private var pressaoGloba =0.0
+    private var vazaoGlobal = 0.0
     private val pressureEntries = LinkedList<Entry>()
     private val flowEntries = LinkedList<Entry>()
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval: Long = 5000 // 5 segundos
     private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dispositivos)
@@ -50,10 +52,13 @@ class Dispositivos : AppCompatActivity() {
         textViewBateria = findViewById(R.id.textViewBateria) // Inicializa a TextView da bateria
         chart = findViewById(R.id.chart)
         btnValv = findViewById(R.id.btnValv)
-        btnColetarDados = findViewById(R.id.btnColetarDados) // Inicializar o botão de coleta de dados
+        // Inicializar o botão de coleta de dados
 
         // Configurar o gráfico
+        limitePressao()
+        limiteVazao()
         configureChart()
+
 
         // Inicializar o banco de dados Firebase
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -70,7 +75,11 @@ class Dispositivos : AppCompatActivity() {
                     if (dataSnapshot.exists()) {
                         // Recuperar os valores de pressão, vazão e bateria do dispositivo
                         val pressao = dataSnapshot.child("pressure").getValue(Double::class.java)
+                        if(pressao != null){pressaoGloba = pressao.toDouble()
+                        }
                         val vazao = dataSnapshot.child("flow").getValue(Double::class.java)
+                        if(vazao != null){vazaoGlobal = vazao.toDouble()
+                        }
                         val bateria = dataSnapshot.child("batteryLevel").getValue(Double::class.java)
 
                         // Exibir os valores na interface do usuário, tratando valores nulos
@@ -105,16 +114,37 @@ class Dispositivos : AppCompatActivity() {
                 toggleState()
             }
 
-            // Configurar o botão para coletar dados do Firebase
-            btnColetarDados.setOnClickListener {
-                coletarDadosDoFirebase()
-            }
+
 
         } else {
             Log.e("Firebase", "userId ou dispositivoId é nulo.")
             Toast.makeText(this, "Erro ao carregar o dispositivo. Por favor, tente novamente.", Toast.LENGTH_SHORT).show()
         }
     }
+    fun limitePressao() {
+        val chart: LineChart = findViewById(R.id.chart)
+        val limitePress = LimitLine(1f, "limite Presssão")
+        limitePress.lineWidth = 4f
+        limitePress.enableDashedLine(6f, 6f, 0f)
+        limitePress.labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+        limitePress.textSize = 4f
+        val yAxis: YAxis = chart.axisLeft
+        yAxis.addLimitLine(limitePress)
+        chart.invalidate()
+    }
+
+    fun limiteVazao() {
+        val chart: LineChart = findViewById(R.id.chart)
+        val limitePress = LimitLine(0.2f, "limite Presssão")
+        limitePress.lineWidth = 3f
+        limitePress.enableDashedLine(6f, 6f, 5f)
+        limitePress.labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+        limitePress.textSize = 4f
+        val yAxis: YAxis = chart.axisLeft
+        yAxis.addLimitLine(limitePress)
+        chart.invalidate()
+    }
+
 
     private fun configureChart() {
         // Configurar o estilo do gráfico
@@ -163,25 +193,46 @@ class Dispositivos : AppCompatActivity() {
 
         val pressureDataSet = LineDataSet(pressureEntries, "Pressão")
         val flowDataSet = LineDataSet(flowEntries, "Vazão")
+        if(pressaoGloba<100.00) {
+            // Configurações de estilo para o conjunto de dados de pressão
+            pressureDataSet.color = Color.BLUE
+            pressureDataSet.valueTextColor = Color.BLUE
+            pressureDataSet.lineWidth = 2f // Espessura da linha
+            pressureDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
+            pressureDataSet.setCircleColor(Color.BLUE) // C or do círculo nos pontos
+            pressureDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
+            pressureDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
+        }
+        else{
+            // Configurações de estilo para o conjunto de dados de pressão
+            pressureDataSet.color = Color.RED
+            pressureDataSet.valueTextColor = Color.RED
+            pressureDataSet.lineWidth = 2f // Espessura da linha
+            pressureDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
+            pressureDataSet.setCircleColor(Color.RED) // C or do círculo nos pontos
+            pressureDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
+            pressureDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
 
-        // Configurações de estilo para o conjunto de dados de pressão
-        pressureDataSet.color = Color.RED
-        pressureDataSet.valueTextColor = Color.RED
-        pressureDataSet.lineWidth = 2f // Espessura da linha
-        pressureDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
-        pressureDataSet.setCircleColor(Color.RED) // Cor do círculo nos pontos
-        pressureDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
-        pressureDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
-
+        }
         // Configurações de estilo para o conjunto de dados de vazão
-        flowDataSet.color = Color.GREEN
-        flowDataSet.valueTextColor = Color.GREEN
-        flowDataSet.lineWidth = 2f // Espessura da linha
-        flowDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
-        flowDataSet.setCircleColor(Color.GREEN) // Cor do círculo nos pontos
-        flowDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
-        flowDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
-
+        if(vazaoGlobal<1000.00) {
+            flowDataSet.color = Color.GREEN
+            flowDataSet.valueTextColor = Color.GREEN
+            flowDataSet.lineWidth = 2f // Espessura da linha
+            flowDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
+            flowDataSet.setCircleColor(Color.GREEN) // Cor do círculo nos pontos
+            flowDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
+            flowDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
+        }
+        else{
+            flowDataSet.color = Color.RED
+            flowDataSet.valueTextColor = Color.RED
+            flowDataSet.lineWidth = 2f // Espessura da linha
+            flowDataSet.circleRadius = 5f // Tamanho do círculo nos pontos
+            flowDataSet.setCircleColor(Color.RED) // Cor do círculo nos pontos
+            flowDataSet.setDrawCircles(true) // Mostrar círculos nos pontos
+            flowDataSet.setDrawValues(false) // Não mostrar os valores dos pontos
+        }
         val lineData = LineData(pressureDataSet, flowDataSet)
         chart.data = lineData
         chart.invalidate() // Atualizar o gráfico
